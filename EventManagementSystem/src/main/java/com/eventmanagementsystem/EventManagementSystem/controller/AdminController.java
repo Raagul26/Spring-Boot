@@ -51,7 +51,7 @@ public class AdminController {
         }
     }
 
-    @GetMapping("/booked_users/{eventId}")
+    @GetMapping("/bookedUsers/{eventId}")
     public ResponseEntity<ApiResponse> bookingsForEvent(@PathVariable String eventId, @RequestHeader(value = "authorization", defaultValue = "") String auth)
     {
         ApiResponse response = new ApiResponse();

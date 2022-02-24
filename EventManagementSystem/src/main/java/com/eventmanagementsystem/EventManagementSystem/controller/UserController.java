@@ -18,7 +18,6 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 
-@CrossOrigin(origins = "*")
 @RestController
 @RequestMapping("/user")
 public class UserController {
@@ -81,7 +80,7 @@ public class UserController {
     }
 
     @GetMapping("/all")
-    public ResponseEntity<ApiResponse> getUsers(@RequestHeader(value = "authorization", defaultValue = "") String auth)
+    public ResponseEntity<ApiResponse> getUsers(@RequestHeader(value = "authorization") String auth)
     {
         ApiResponse response = new ApiResponse();
         try
@@ -106,7 +105,7 @@ public class UserController {
     }
 
     @PutMapping("/update/{userId}")
-    public ResponseEntity<ApiResponse> updateUser(@PathVariable String userId, @Valid @RequestBody UserUpdate user, @RequestHeader(value = "authorization", defaultValue = "") String auth)
+    public ResponseEntity<ApiResponse> updateUser(@PathVariable String userId, @Valid @RequestBody UserUpdate user, @RequestHeader(value = "authorization") String auth)
     {
         ApiResponse response = new ApiResponse();
         try
@@ -131,8 +130,8 @@ public class UserController {
         }
     }
 
-    @PostMapping("/book_event")
-    public ResponseEntity<ApiResponse> bookEvent(@RequestBody Booking booking, @RequestHeader(value = "authorization", defaultValue = "") String auth)
+    @PostMapping("/bookEvent")
+    public ResponseEntity<ApiResponse> bookEvent(@RequestBody Booking booking, @RequestHeader(value = "authorization") String auth)
     {
         ApiResponse response = new ApiResponse();
         try
@@ -156,8 +155,8 @@ public class UserController {
         }
     }
 
-    @GetMapping("/booked_events/{userId}")
-    public ResponseEntity<Object> bookedEvents(@PathVariable String userId, @RequestHeader(value = "authorization", defaultValue = "") String auth)
+    @GetMapping("/bookedEvents/{userId}")
+    public ResponseEntity<ApiResponse> bookedEvents(@PathVariable String userId, @RequestHeader(value = "authorization") String auth)
     {
         ApiResponse response = new ApiResponse();
         try
@@ -181,8 +180,8 @@ public class UserController {
         }
     }
 
-    @PostMapping("/cancel_event")
-    public ResponseEntity<ApiResponse> cancelEvent(@RequestBody Booking booking, @RequestHeader(value = "authorization", defaultValue = "") String auth)
+    @PostMapping("/cancelEvent")
+    public ResponseEntity<ApiResponse> cancelEvent(@RequestBody Booking booking, @RequestHeader(value = "authorization") String auth)
     {
         ApiResponse response = new ApiResponse();
         try

@@ -14,16 +14,11 @@ public interface UserRepository extends MongoRepository<User,String> {
     @Query(value = "{}", fields = "{password:0}")
     List<User> findAll();
 
-    @Query(value = "{emailId:?0}")
     User findByEmailId(String emailId);
 
     @Query(value = "{userId:?0}", fields = "{password:0}")
     User findByUsersId(String userId);
 
-    @Query(value = "{userId:?0}")
     User findByUserId(String userId);
-
-    @Query("{emailId:?0, password:?1}")
-    List<User> findByEmailIdAndPassword(String emailId, String password);
 
 }

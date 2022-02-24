@@ -1,7 +1,6 @@
 package com.eventmanagementsystem.EventManagementSystem.repository;
 
 import com.eventmanagementsystem.EventManagementSystem.model.Admin;
-import com.eventmanagementsystem.EventManagementSystem.model.User;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.Query;
 
