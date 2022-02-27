@@ -1,22 +1,20 @@
 package com.eventmanagementsystem.EventManagementSystem.controller.response;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+@AllArgsConstructor
 @NoArgsConstructor
 @Data
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class ApiResponse {
 
-        private String status;
+    private String status;
 
-        private String errorCode;
+    private String message;
 
-        private String message;
-
-        private String accessToken;
-
-        private Object data;
+    private Object data;
 
 }

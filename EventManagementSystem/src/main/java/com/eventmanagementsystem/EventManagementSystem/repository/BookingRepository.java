@@ -8,10 +8,9 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
-public interface BookingRepository extends MongoRepository<Booking,String> {
+public interface BookingRepository extends MongoRepository<Booking, String> {
 
-    @Query("{eventId:?0, userId:?1}")
-    Booking checkAlreadyBooked(String eventId, String userId);
+    Booking findByEventIdAndUserId(String eventId, String userId);
 
     @Query("{eventId:?0,attendedStatus:'none'}")
     List<Booking> findBookersByEventId(String eventId);

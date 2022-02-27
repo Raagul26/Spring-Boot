@@ -1,5 +1,7 @@
 package com.eventmanagementsystem.EventManagementSystem.service;
 
+import com.eventmanagementsystem.EventManagementSystem.exception.EventIdNotFoundException;
+import com.eventmanagementsystem.EventManagementSystem.exception.TitleAlreadyExistsException;
 import com.eventmanagementsystem.EventManagementSystem.model.Event;
 import com.eventmanagementsystem.EventManagementSystem.repository.EventRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,24 +12,22 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 @Service
-public class EventServiceImpl implements EventService{
+public class EventServiceImpl implements EventService {
 
     @Autowired
     public EventRepository eventRepository;
 
     @Override
-    public Event createEvent(Event event)
-    {
-        Event newEvent = new Event();
-        if(eventRepository.findByTitle(event.getTitle()).size()>0)
-        {
-            throw new RuntimeException("Title already exists");
-        }
-        else {
+    public Event createEvent(Event event) {
+
+        if (eventRepository.findByTitle(event.getTitle()).size() > 0) {
+            throw new TitleAlreadyExistsException("Title already exists");
+        } else {
             LocalDateTime date = LocalDateTime.now();
             DateTimeFormatter dateFormat = DateTimeFormatter.ofPattern("dd-MM-yyyy");
             int eventId = eventRepository.findAll().size() + 1;
-            newEvent.setEventId("EVT"+eventId);
+            Event newEvent = new Event();
+            newEvent.setEventId("EVT" + eventId);
             newEvent.setTitle(event.getTitle());
             newEvent.setVenue(event.getVenue());
             newEvent.setDate(event.getDate());
@@ -42,52 +42,31 @@ public class EventServiceImpl implements EventService{
 
     @Override
     public Event getEventByEventId(String eventId) {
-        if(eventRepository.findByEventId(eventId)!=null)
-        {
+        if (eventRepository.findByEventId(eventId) != null) {
             return eventRepository.findByEventId(eventId);
-        }
-        else {
-            throw new RuntimeException("Event Id not found");
-        }
-    }
-
-    @Override
-    public List<Event> getAllEvents()
-    {
-        if(eventRepository.findAll().isEmpty())
-        {
-            throw new RuntimeException("No Events Found");
-        }
-        else
-        {
-            return eventRepository.findAll();
+        } else {
+            throw new EventIdNotFoundException(eventId + " - Event Id not found");
         }
     }
 
     @Override
-    public List<Event> getActiveEvents()
-    {
-        try
-        {
-            return eventRepository.findActiveEvents();
-        }
-        catch(Exception e)
-        {
-            throw new RuntimeException("No Active Events Found");
-        }
+    public List<Event> getAllEvents() {
+        return eventRepository.findAll();
+    }
+
+    @Override
+    public List<Event> getActiveEvents() {
+        return eventRepository.findActiveEvents();
     }
 
     @Override
     public void deleteEvent(String eventId) {
-        if(eventRepository.findByEventId(eventId)!=null)
-        {
-            Event updatedEvent = eventRepository.findByEventId(eventId);
-            updatedEvent.setStatus("deleted");
-            eventRepository.save(updatedEvent);
-        }
-        else
-        {
-            throw new RuntimeException("Event Id not found");
+        if (eventRepository.findByEventId(eventId) != null) {
+            Event deleteEvent = eventRepository.findByEventId(eventId);
+            deleteEvent.setStatus("deleted");
+            eventRepository.save(deleteEvent);
+        } else {
+            throw new EventIdNotFoundException(eventId + " - Event Id not found");
         }
     }
 
@@ -95,11 +74,9 @@ public class EventServiceImpl implements EventService{
     public void updateEvent(String eventId, Event event) {
         Event tempEvent = eventRepository.findByEventId(eventId);
 
-        if(tempEvent==null)
-        {
-            throw new RuntimeException("Event Id not found");
-        }
-        else {
+        if (tempEvent == null) {
+            throw new EventIdNotFoundException(eventId + " - Event Id not found");
+        } else {
             LocalDateTime date = LocalDateTime.now();
             DateTimeFormatter dateFormat = DateTimeFormatter.ofPattern("dd-MM-yyyy");
             tempEvent.setTitle(event.getTitle());
@@ -111,5 +88,4 @@ public class EventServiceImpl implements EventService{
             eventRepository.save(tempEvent);
         }
     }
-
 }

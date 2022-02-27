@@ -1,10 +1,13 @@
 package com.eventmanagementsystem.EventManagementSystem.util;
 
+import com.eventmanagementsystem.EventManagementSystem.exception.GlobalExceptionHandler;
+import com.eventmanagementsystem.EventManagementSystem.exception.JwtTokenExpiredException;
 import com.eventmanagementsystem.EventManagementSystem.model.Admin;
 import com.eventmanagementsystem.EventManagementSystem.model.UserLogin;
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
+import com.eventmanagementsystem.EventManagementSystem.repository.AdminRepository;
+import com.eventmanagementsystem.EventManagementSystem.repository.UserRepository;
+import io.jsonwebtoken.*;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.io.Serializable;
@@ -15,6 +18,12 @@ import java.util.function.Function;
 
 @Component
 public class JwtUtility implements Serializable {
+
+    @Autowired
+    private AdminRepository adminRepository;
+
+    @Autowired
+    private UserRepository userRepository;
 
     private static final long serialVersionUID = -2550185165626007488L;
 
@@ -39,7 +48,12 @@ public class JwtUtility implements Serializable {
 
     //for retrieving any information from token we will need the secret key
     private Claims getAllClaimsFromToken(String token) {
-        return Jwts.parser().setSigningKey(secret).parseClaimsJws(token).getBody();
+        try {
+            return Jwts.parser().setSigningKey(secret).parseClaimsJws(token).getBody();
+        }catch (ExpiredJwtException e)
+        {
+            throw new JwtTokenExpiredException("JWT Token Expired");
+        }
     }
 
     //check if the token has expired
@@ -67,14 +81,25 @@ public class JwtUtility implements Serializable {
     }
 
     //validate token
-    public void validateToken(String token) throws Exception {
+    public Boolean validateAdminToken(String token) {
         try {
-            Jwts.parser().setSigningKey(secret).parseClaimsJws(token);
+            final String emailId = getUsernameFromToken(token);
+            return (adminRepository.findByEmailId(emailId) != null && !isTokenExpired(token));
         }
-        catch (Exception e)
+        catch (IllegalArgumentException | SignatureException | MalformedJwtException e)
         {
-            throw new Exception();
+            return false;
         }
     }
 
+    public Boolean validateUserToken(String token) {
+        try {
+            final String emailId = getUsernameFromToken(token);
+            return (userRepository.findByEmailId(emailId) != null && !isTokenExpired(token));
+        }
+        catch (IllegalArgumentException | SignatureException | MalformedJwtException e)
+        {
+            return false;
+        }
+    }
 }

@@ -11,7 +11,10 @@ import java.util.List;
 public interface BookingService {
 
     void bookEvent(Booking booking);
+
     List<User> getBookersByEventId(String eventId);
+
     List<Event> getEventsByUserId(String userId);
+
     void cancelEventBooking(Booking booking);
 }

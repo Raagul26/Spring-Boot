@@ -1,6 +1,7 @@
 package com.eventmanagementsystem.EventManagementSystem.controller;
 
 import com.eventmanagementsystem.EventManagementSystem.controller.response.ApiResponse;
+import com.eventmanagementsystem.EventManagementSystem.enums.Status;
 import com.eventmanagementsystem.EventManagementSystem.model.Booking;
 import com.eventmanagementsystem.EventManagementSystem.model.User;
 import com.eventmanagementsystem.EventManagementSystem.model.UserLogin;
@@ -11,8 +12,8 @@ import com.eventmanagementsystem.EventManagementSystem.service.BookingService;
 import com.eventmanagementsystem.EventManagementSystem.service.UserService;
 import com.eventmanagementsystem.EventManagementSystem.util.JwtUtility;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -38,170 +39,105 @@ public class UserController {
     private AdminRepository adminRepository;
 
     // user signup
-    @PostMapping(value="/signup",consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<ApiResponse> create(@Valid @RequestBody User user)
-    {
-        ApiResponse response = new ApiResponse();
-        try
-        {
-            userService.createUser(user);
-            response.setStatus("Success");
-            response.setMessage("User Created Successfully");
-            return new ResponseEntity<>(response,HttpStatus.CREATED);
-        }
-        catch (Exception e)
-        {
-            response.setStatus("Error");
-            response.setMessage(e.getMessage());
-            return new ResponseEntity<>(response,HttpStatus.BAD_REQUEST);
-        }
+    @PostMapping(value = "/signup")
+    public ResponseEntity<ApiResponse> create(@Valid @RequestBody User user) {
+        userService.createUser(user);
+        ApiResponse responseBody = new ApiResponse();
+        responseBody.setStatus(Status.SUCCESS.name());
+        responseBody.setMessage("User Created Successfully");
+        return new ResponseEntity<>(responseBody, HttpStatus.CREATED);
     }
 
     // user login
     @PostMapping("/login")
-    public ResponseEntity<ApiResponse> getUserByEmailIdAndPassword(@Valid @RequestBody UserLogin userLogin)
-    {
-        ApiResponse response = new ApiResponse();
-        try
-        {
-            userService.getUserByEmailIdAndPassword(userLogin);
-            response.setStatus("Success");
-            response.setMessage("User Logged in successfully");
-            response.setAccessToken(jwtUtility.generateToken(userLogin));
-            return new ResponseEntity<>(response,HttpStatus.OK);
-        }
-        catch (Exception e)
-        {
-            response.setStatus("Error");
-            response.setMessage(e.getMessage());
-            return new ResponseEntity<>(response,HttpStatus.BAD_REQUEST);
-        }
-
+    public ResponseEntity<ApiResponse> userLogin(@Valid @RequestBody UserLogin userLoginDetails) {
+        userService.userLogin(userLoginDetails);
+        ApiResponse responseBody = new ApiResponse();
+        responseBody.setStatus(Status.SUCCESS.name());
+        responseBody.setMessage("User Logged in successfully");
+        String jwtToken = jwtUtility.generateToken(userLoginDetails);
+        HttpHeaders responseHeader = new HttpHeaders();
+        responseHeader.set("JWTToken", jwtToken);
+        return new ResponseEntity<>(responseBody, responseHeader, HttpStatus.OK);
     }
 
+    // get all users
     @GetMapping("/all")
-    public ResponseEntity<ApiResponse> getUsers(@RequestHeader(value = "authorization") String auth)
-    {
-        ApiResponse response = new ApiResponse();
-        try
-        {
-            if(adminRepository.findByEmailId(jwtUtility.getUsernameFromToken(auth))==null)
-            {
-                response.setStatus("Access denied");
-                return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
-            }
-            jwtUtility.validateToken(auth);
-            response.setData(userService.getAllUsers());
-            response.setStatus("Success");
-            response.setMessage("Fetched Successfully");
-            return new ResponseEntity<>(response,HttpStatus.OK);
-        }
-        catch (Exception e)
-        {
-            response.setStatus("Error");
-            response.setMessage(e.getMessage());
-            return new ResponseEntity<>(response,HttpStatus.BAD_REQUEST);
+    public ResponseEntity<ApiResponse> getUsers(@RequestHeader(value = "authorization") String auth) {
+        ApiResponse responseBody = new ApiResponse();
+        if (jwtUtility.validateAdminToken(auth)) {
+            responseBody.setData(userService.getAllUsers());
+            responseBody.setStatus(Status.SUCCESS.name());
+            responseBody.setMessage("Fetched Successfully");
+            return new ResponseEntity<>(responseBody, HttpStatus.OK);
+        } else {
+            responseBody.setStatus(Status.FAILED.name());
+            responseBody.setMessage("Access denied");
+            return new ResponseEntity<>(responseBody, HttpStatus.UNAUTHORIZED);
         }
     }
 
+    // update user
     @PutMapping("/update/{userId}")
-    public ResponseEntity<ApiResponse> updateUser(@PathVariable String userId, @Valid @RequestBody UserUpdate user, @RequestHeader(value = "authorization") String auth)
-    {
-        ApiResponse response = new ApiResponse();
-        try
-        {
-            if(userRepository.findByEmailId(jwtUtility.getUsernameFromToken(auth))==null)
-            {
-                response.setStatus("Access denied");
-                return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
-            }
-            jwtUtility.validateToken(auth);
+    public ResponseEntity<ApiResponse> updateUser(@PathVariable String userId, @Valid @RequestBody UserUpdate user, @RequestHeader(value = "authorization") String auth) {
+        ApiResponse responseBody = new ApiResponse();
+        if (jwtUtility.validateUserToken(auth)) {
             userService.updateUser(userId, user);
-            response.setStatus("Success");
-            response.setMessage("User Updated Successfully");
-            return new ResponseEntity<>(response,HttpStatus.OK);
-        }
-        catch (Exception e)
-        {
-            response.setStatus("Error");
-            response.setMessage(e.getMessage());
-            response.setErrorCode("400");
-            return new ResponseEntity<>(response,HttpStatus.BAD_REQUEST);
+            responseBody.setStatus(Status.SUCCESS.name());
+            responseBody.setMessage("User Updated Successfully");
+            return new ResponseEntity<>(responseBody, HttpStatus.OK);
+        } else {
+            responseBody.setStatus(Status.FAILED.name());
+            responseBody.setMessage("Access denied");
+            return new ResponseEntity<>(responseBody, HttpStatus.UNAUTHORIZED);
         }
     }
 
+    // book event
     @PostMapping("/bookEvent")
-    public ResponseEntity<ApiResponse> bookEvent(@RequestBody Booking booking, @RequestHeader(value = "authorization") String auth)
-    {
-        ApiResponse response = new ApiResponse();
-        try
-        {
-            if(userRepository.findByEmailId(jwtUtility.getUsernameFromToken(auth))==null)
-            {
-                response.setStatus("Access denied");
-                return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
-            }
-            jwtUtility.validateToken(auth);
+    public ResponseEntity<ApiResponse> bookEvent(@RequestBody Booking booking, @RequestHeader(value = "authorization") String auth) {
+        ApiResponse responseBody = new ApiResponse();
+        if (jwtUtility.validateUserToken(auth)) {
             bookingService.bookEvent(booking);
-            response.setStatus("Success");
-            response.setMessage("Event Booked Successfully");
-            return new ResponseEntity<>(response,HttpStatus.OK);
-        }
-        catch (Exception e)
-        {
-            response.setStatus("Error");
-            response.setMessage(e.getMessage());
-            return new ResponseEntity<>(response,HttpStatus.BAD_REQUEST);
+            responseBody.setStatus(Status.SUCCESS.name());
+            responseBody.setMessage("Event Booked Successfully");
+            return new ResponseEntity<>(responseBody, HttpStatus.OK);
+        } else {
+            responseBody.setStatus(Status.FAILED.name());
+            responseBody.setMessage("Access Denied");
+            return new ResponseEntity<>(responseBody, HttpStatus.UNAUTHORIZED);
         }
     }
 
+    // get booked events
     @GetMapping("/bookedEvents/{userId}")
-    public ResponseEntity<ApiResponse> bookedEvents(@PathVariable String userId, @RequestHeader(value = "authorization") String auth)
-    {
-        ApiResponse response = new ApiResponse();
-        try
-        {
-            if(userRepository.findByEmailId(jwtUtility.getUsernameFromToken(auth))==null)
-            {
-                response.setStatus("Access denied");
-                return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
-            }
-            jwtUtility.validateToken(auth);
-            response.setData(bookingService.getEventsByUserId(userId));
-            response.setStatus("Success");
-            response.setMessage("Fetched booked events");
-            return  new ResponseEntity<>(response,HttpStatus.OK);
-        }
-        catch (Exception e)
-        {
-            response.setStatus("Error");
-            response.setMessage(e.getMessage());
-            return new ResponseEntity<>(response,HttpStatus.BAD_REQUEST);
+    public ResponseEntity<ApiResponse> bookedEvents(@PathVariable String userId, @RequestHeader(value = "authorization") String auth) {
+        ApiResponse responseBody = new ApiResponse();
+        if (jwtUtility.validateUserToken(auth)) {
+            responseBody.setData(bookingService.getEventsByUserId(userId));
+            responseBody.setStatus(Status.SUCCESS.name());
+            responseBody.setMessage("Fetched booked events");
+            return new ResponseEntity<>(responseBody, HttpStatus.OK);
+        } else {
+            responseBody.setStatus(Status.FAILED.name());
+            responseBody.setMessage("Access denied");
+            return new ResponseEntity<>(responseBody, HttpStatus.UNAUTHORIZED);
         }
     }
 
+    // cancel event
     @PostMapping("/cancelEvent")
-    public ResponseEntity<ApiResponse> cancelEvent(@RequestBody Booking booking, @RequestHeader(value = "authorization") String auth)
-    {
-        ApiResponse response = new ApiResponse();
-        try
-        {
-            if(userRepository.findByEmailId(jwtUtility.getUsernameFromToken(auth))==null)
-            {
-                response.setStatus("Access denied");
-                return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
-            }
-            jwtUtility.validateToken(auth);
+    public ResponseEntity<ApiResponse> cancelEvent(@RequestBody Booking booking, @RequestHeader(value = "authorization") String auth) {
+        ApiResponse responseBody = new ApiResponse();
+        if (jwtUtility.validateUserToken(auth)) {
             bookingService.cancelEventBooking(booking);
-            response.setStatus("Success");
-            response.setMessage("Cancelled Event");
-            return new ResponseEntity<>(response,HttpStatus.OK);
-        }
-        catch (Exception e)
-        {
-            response.setStatus("Error");
-            response.setMessage(e.getMessage());
-            return  new ResponseEntity<>(response,HttpStatus.BAD_REQUEST);
+            responseBody.setStatus(Status.SUCCESS.name());
+            responseBody.setMessage("Cancelled Event");
+            return new ResponseEntity<>(responseBody, HttpStatus.OK);
+        } else {
+            responseBody.setStatus(Status.FAILED.name());
+            responseBody.setMessage("Access denied");
+            return new ResponseEntity<>(responseBody, HttpStatus.UNAUTHORIZED);
         }
     }
 

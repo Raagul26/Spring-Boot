@@ -8,7 +8,7 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
-public interface EventRepository extends MongoRepository<Event,String> {
+public interface EventRepository extends MongoRepository<Event, String> {
 
     @Query("{status:'active'}")
     List<Event> findActiveEvents();
@@ -17,4 +17,5 @@ public interface EventRepository extends MongoRepository<Event,String> {
     Event findByEventId(String eventId);
 
     List<Event> findByTitle(String title);
+
 }

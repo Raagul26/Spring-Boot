@@ -18,7 +18,7 @@ import javax.validation.constraints.Size;
 @Document("events")
 public class Event {
 
-    private  String id;
+    private String id;
 
     private String eventId;
 
@@ -31,7 +31,7 @@ public class Event {
     private String venue;
 
     @NotBlank
-    @Pattern(regexp = "^(3[01]|[12][0-9]|0[1-9])-(1[0-2]|0[1-9])-[0-9]{4}$" ,message = "must be a valid date (DD-MM-YYYY)")
+    @Pattern(regexp = "^(3[01]|[12][0-9]|0[1-9])-(1[0-2]|0[1-9])-[0-9]{4}$", message = "must be a valid date (DD-MM-YYYY)")
     private String date;
 
     @Min(100)
