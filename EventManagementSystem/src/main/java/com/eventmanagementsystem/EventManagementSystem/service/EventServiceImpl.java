@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class EventServiceImpl implements EventService {
@@ -18,7 +19,7 @@ public class EventServiceImpl implements EventService {
     public EventRepository eventRepository;
 
     @Override
-    public Event createEvent(Event event) {
+    public Map<String, String> createEvent(Event event) {
 
         if (eventRepository.findByTitle(event.getTitle()).size() > 0) {
             throw new TitleAlreadyExistsException("Title already exists");
@@ -36,7 +37,8 @@ public class EventServiceImpl implements EventService {
             newEvent.setCreatedBy("admin");
             newEvent.setCreatedOn(dateFormat.format(date));
             newEvent.setStatus("active");
-            return eventRepository.insert(newEvent);
+            Event createdEvent = eventRepository.insert(newEvent);
+            return Map.of("EventId", createdEvent.getEventId(), "Title", createdEvent.getTitle());
         }
     }
 

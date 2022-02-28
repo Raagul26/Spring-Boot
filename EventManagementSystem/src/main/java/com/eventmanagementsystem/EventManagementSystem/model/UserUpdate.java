@@ -5,7 +5,6 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import javax.validation.constraints.Email;
 import javax.validation.constraints.Size;
 
 @NoArgsConstructor
@@ -19,9 +18,6 @@ public class UserUpdate {
 
     @Size(min = 1, max = 15, message = "last name should contain min 1 letters")
     private String lastName;
-
-    @Email(regexp = "[a-z0-9._%+-]+@[a-z0-9.-]+\\.[a-z]{2,3}", message = "must be a valid email id")
-    private String emailId;
 
     @Size(min = 10, max = 10, message = "must contain 10 numbers")
     private String contactNo;

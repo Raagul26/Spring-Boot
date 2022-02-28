@@ -32,8 +32,7 @@ public class EventController {
     public ResponseEntity<ApiResponse> createEvent(@Valid @RequestBody Event event, @RequestHeader(value = "authorization") String auth) {
         ApiResponse response = new ApiResponse();
         if (jwtUtility.validateAdminToken(auth)) {
-            Event newEvent = eventService.createEvent(event);
-            response.setData(Map.of("EventId", newEvent.getEventId(), "Title", newEvent.getTitle()));
+            response.setData(eventService.createEvent(event));
             response.setStatus(Status.SUCCESS.name());
             response.setMessage("Event created successfully");
             return new ResponseEntity<>(response, HttpStatus.CREATED);

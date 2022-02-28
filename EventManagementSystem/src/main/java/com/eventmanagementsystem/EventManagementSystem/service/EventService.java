@@ -4,11 +4,12 @@ import com.eventmanagementsystem.EventManagementSystem.model.Event;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
 
 @Service
 public interface EventService {
 
-    Event createEvent(Event event);
+    Map<String, String> createEvent(Event event);
 
     Event getEventByEventId(String id);
 
