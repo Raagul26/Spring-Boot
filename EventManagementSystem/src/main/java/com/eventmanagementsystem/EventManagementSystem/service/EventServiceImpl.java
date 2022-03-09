@@ -1,14 +1,19 @@
 package com.eventmanagementsystem.EventManagementSystem.service;
 
 import com.eventmanagementsystem.EventManagementSystem.exception.EventIdNotFoundException;
+import com.eventmanagementsystem.EventManagementSystem.exception.EventTitleNotFoundException;
 import com.eventmanagementsystem.EventManagementSystem.exception.TitleAlreadyExistsException;
 import com.eventmanagementsystem.EventManagementSystem.model.Event;
 import com.eventmanagementsystem.EventManagementSystem.repository.EventRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -18,14 +23,16 @@ public class EventServiceImpl implements EventService {
     @Autowired
     public EventRepository eventRepository;
 
+    @Autowired
+    private MongoTemplate mongoTemplate;
+
     @Override
     public Map<String, String> createEvent(Event event) {
-
-        if (eventRepository.findByTitle(event.getTitle()).size() > 0) {
+        if (eventRepository.findByTitleAndStatus(event.getTitle(),"active") != null ) {
             throw new TitleAlreadyExistsException("Title already exists");
         } else {
             LocalDateTime date = LocalDateTime.now();
-            DateTimeFormatter dateFormat = DateTimeFormatter.ofPattern("dd-MM-yyyy");
+            DateTimeFormatter dateFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd");
             int eventId = eventRepository.findAll().size() + 1;
             Event newEvent = new Event();
             newEvent.setEventId("EVT" + eventId);
@@ -38,16 +45,25 @@ public class EventServiceImpl implements EventService {
             newEvent.setCreatedOn(dateFormat.format(date));
             newEvent.setStatus("active");
             Event createdEvent = eventRepository.insert(newEvent);
-            return Map.of("EventId", createdEvent.getEventId(), "Title", createdEvent.getTitle());
+            return Map.of("EventId", "createdEvent.getEventId()", "Title", "createdEvent.getTitle()");
         }
     }
 
     @Override
     public Event getEventByEventId(String eventId) {
-        if (eventRepository.findByEventId(eventId) != null) {
-            return eventRepository.findByEventId(eventId);
+        if (eventRepository.findByEventIdAndStatus(eventId,"active") != null) {
+            return eventRepository.findByEventIdAndStatus(eventId,"active");
         } else {
             throw new EventIdNotFoundException(eventId + " - Event Id not found");
+        }
+    }
+
+    @Override
+    public String getEventIdByTitle(String title) {
+        if (eventRepository.findByTitleAndStatus(title,"active") != null) {
+            return eventRepository.findByTitleAndStatus(title,"active").getEventId();
+        } else {
+            throw new EventTitleNotFoundException(title+ " not found");
         }
     }
 
@@ -58,13 +74,18 @@ public class EventServiceImpl implements EventService {
 
     @Override
     public List<Event> getActiveEvents() {
-        return eventRepository.findActiveEvents();
+        return eventRepository.findByStatus("active");
+    }
+
+    @Override
+    public List<Event> getDeletedEvents() {
+        return eventRepository.findByStatus("deleted");
     }
 
     @Override
     public void deleteEvent(String eventId) {
-        if (eventRepository.findByEventId(eventId) != null) {
-            Event deleteEvent = eventRepository.findByEventId(eventId);
+        if (eventRepository.findByEventIdAndStatus(eventId,"active") != null) {
+            Event deleteEvent = eventRepository.findByEventIdAndStatus(eventId,"active");
             deleteEvent.setStatus("deleted");
             eventRepository.save(deleteEvent);
         } else {
@@ -74,13 +95,13 @@ public class EventServiceImpl implements EventService {
 
     @Override
     public void updateEvent(String eventId, Event event) {
-        Event tempEvent = eventRepository.findByEventId(eventId);
+        Event tempEvent = eventRepository.findByEventIdAndStatus(eventId,"active");
 
         if (tempEvent == null) {
             throw new EventIdNotFoundException(eventId + " - Event Id not found");
         } else {
             LocalDateTime date = LocalDateTime.now();
-            DateTimeFormatter dateFormat = DateTimeFormatter.ofPattern("dd-MM-yyyy");
+            DateTimeFormatter dateFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd");
             tempEvent.setTitle(event.getTitle());
             tempEvent.setDate(event.getDate());
             tempEvent.setVenue(event.getVenue());
@@ -89,5 +110,11 @@ public class EventServiceImpl implements EventService {
             tempEvent.setLastUpdatedOn(dateFormat.format(date));
             eventRepository.save(tempEvent);
         }
+    }
+
+    @Override
+    public List<String> getEventTitles() {
+        Query query = new Query(Criteria.where("status").is("active"));
+        return new ArrayList<>(mongoTemplate.findDistinct(query,"title", Event.class, String.class));
     }
 }

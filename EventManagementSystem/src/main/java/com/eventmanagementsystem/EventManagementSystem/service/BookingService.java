@@ -14,6 +14,8 @@ public interface BookingService {
 
     List<User> getBookersByEventId(String eventId);
 
+    List<User> getBookersByEventTitle(String title);
+
     List<Event> getEventsByUserId(String userId);
 
     void cancelEventBooking(Booking booking);

@@ -30,7 +30,7 @@ public class UserServiceImpl implements UserService {
     public void createUser(User user) {
         User newUser = new User();
         LocalDateTime date = LocalDateTime.now();
-        DateTimeFormatter dateFormat = DateTimeFormatter.ofPattern("dd-MM-yyyy");
+        DateTimeFormatter dateFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd");
         String encodedPassword = bCryptPasswordEncoder.encode(user.getPassword());
         if (userRepository.findByEmailId(user.getEmailId()) == null) {
             int userId = userRepository.findAll().size() + 1;
@@ -55,12 +55,14 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void userLogin(UserLogin userLoginDetails) {
+    public String userLogin(UserLogin userLoginDetails) {
         try {
             String encodedPassword = getUserByEmailId(userLoginDetails.getEmailId()).getPassword();
             if (!bCryptPasswordEncoder.matches(userLoginDetails.getPassword(), encodedPassword)) {
                 throw new InvalidCredException("Invalid EmailId or Password");
             }
+            String userId = getUserByEmailId(userLoginDetails.getEmailId()).getUserId();
+            return userId;
         }
         catch (NullPointerException e)
         {

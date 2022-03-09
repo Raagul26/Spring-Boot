@@ -4,6 +4,7 @@ import com.eventmanagementsystem.EventManagementSystem.controller.response.ApiRe
 import com.eventmanagementsystem.EventManagementSystem.enums.Status;
 import com.eventmanagementsystem.EventManagementSystem.model.Event;
 import com.eventmanagementsystem.EventManagementSystem.repository.AdminRepository;
+import com.eventmanagementsystem.EventManagementSystem.repository.EventRepository;
 import com.eventmanagementsystem.EventManagementSystem.service.EventService;
 import com.eventmanagementsystem.EventManagementSystem.util.JwtUtility;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,6 +13,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -26,6 +29,9 @@ public class EventController {
 
     @Autowired
     private AdminRepository adminRepository;
+
+    @Autowired
+    private EventRepository eventRepository;
 
     // create event
     @PostMapping(value = "/create")
@@ -69,6 +75,16 @@ public class EventController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
+    // get event titles
+    @GetMapping("/titles")
+    public ResponseEntity<Object> getEventTitles() {
+        ApiResponse response = new ApiResponse();
+        response.setData(eventService.getEventTitles());
+        response.setStatus(Status.SUCCESS.name());
+        response.setMessage("Fetched successfully");
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
     // get event by id
     @GetMapping("/{id}")
     public ResponseEntity<Object> getEventById(@PathVariable String id) {
@@ -101,6 +117,22 @@ public class EventController {
         ApiResponse response = new ApiResponse();
         if (jwtUtility.validateAdminToken(auth)) {
             eventService.updateEvent(eventId, event);
+            response.setStatus(Status.SUCCESS.name());
+            response.setMessage("Updated Successfully");
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        } else {
+            response.setStatus(Status.FAILED.name());
+            response.setMessage("Unauthorized");
+            return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
+        }
+    }
+
+    @GetMapping("/deleted")
+    public ResponseEntity<ApiResponse> deletedEvents(@RequestHeader(value = "authorization") String auth)
+    {
+        ApiResponse response = new ApiResponse();
+        if (jwtUtility.validateAdminToken(auth)) {
+            response.setData(eventService.getDeletedEvents());
             response.setStatus(Status.SUCCESS.name());
             response.setMessage("Updated Successfully");
             return new ResponseEntity<>(response, HttpStatus.OK);

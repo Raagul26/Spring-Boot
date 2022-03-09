@@ -16,7 +16,7 @@ public interface UserService {
 
     User getUserByEmailId(String emailId);
 
-    void userLogin(UserLogin userLoginDetails);
+    String userLogin(UserLogin userLoginDetails);
 
     void updateUser(String userId, UserUpdate user);
 

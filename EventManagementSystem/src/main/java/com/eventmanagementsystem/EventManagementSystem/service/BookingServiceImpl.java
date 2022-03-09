@@ -1,9 +1,6 @@
 package com.eventmanagementsystem.EventManagementSystem.service;
 
-import com.eventmanagementsystem.EventManagementSystem.exception.EventAlreadyBookedException;
-import com.eventmanagementsystem.EventManagementSystem.exception.EventIdNotFoundException;
-import com.eventmanagementsystem.EventManagementSystem.exception.InvalidCredException;
-import com.eventmanagementsystem.EventManagementSystem.exception.UserNotFoundException;
+import com.eventmanagementsystem.EventManagementSystem.exception.*;
 import com.eventmanagementsystem.EventManagementSystem.model.Booking;
 import com.eventmanagementsystem.EventManagementSystem.model.Event;
 import com.eventmanagementsystem.EventManagementSystem.model.User;
@@ -14,6 +11,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @Service
 public class BookingServiceImpl implements BookingService {
@@ -37,8 +35,20 @@ public class BookingServiceImpl implements BookingService {
                 newBooking.setUserId(booking.getUserId());
                 newBooking.setAttendedStatus("none");
                 bookingRepository.insert(newBooking);
-            } else {
-                throw new EventAlreadyBookedException(booking.getUserId()+" already booked "+booking.getEventId());
+            }else if(Objects.equals(booking.getAttendedStatus(), "cancelled") && bookingRepository.findByEventIdAndUserIdAndAttendedStatus(booking.getEventId(),booking.getUserId(), "none")!=null)
+            {
+                Booking updateBooking = bookingRepository.findByEventIdAndUserIdAndAttendedStatus(booking.getEventId(),booking.getUserId(), "none");
+                updateBooking.setAttendedStatus("cancelled");
+                bookingRepository.save(updateBooking);
+            }
+            else if(Objects.equals(booking.getAttendedStatus(), "none") && bookingRepository.findByEventIdAndUserIdAndAttendedStatus(booking.getEventId(),booking.getUserId(), "cancelled")!=null)
+            {
+                Booking updateBooking = bookingRepository.findByEventIdAndUserIdAndAttendedStatus(booking.getEventId(),booking.getUserId(), "cancelled");
+                updateBooking.setAttendedStatus("none");
+                bookingRepository.save(updateBooking);
+            }
+            else {
+                throw new EventAlreadyBookedException("Event Already Booked!");
             }
         } else {
             throw new UserNotFoundException("User not found with userId "+booking.getUserId());
@@ -49,7 +59,7 @@ public class BookingServiceImpl implements BookingService {
     public List<User> getBookersByEventId(String eventId) {
         if (eventService.getEventByEventId(eventId) != null) {
             List<User> bookedUsers = new ArrayList<>();
-            for (Booking b : bookingRepository.findBookersByEventId(eventId)) {
+            for (Booking b : bookingRepository.findByEventIdAndAttendedStatus(eventId,"none")) {
                 bookedUsers.add(userRepository.findByUsersId(b.getUserId()));
             }
             return bookedUsers;
@@ -59,10 +69,23 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
+    public List<User> getBookersByEventTitle(String title) {
+        if (eventService.getEventIdByTitle(title) != null) {
+            List<User> bookedUsers = new ArrayList<>();
+            for (Booking b : bookingRepository.findByEventIdAndAttendedStatus(eventService.getEventIdByTitle(title),"none")) {
+                bookedUsers.add(userRepository.findByUsersId(b.getUserId()));
+            }
+            return bookedUsers;
+        } else {
+            throw new EventTitleNotFoundException(title+" not found");
+        }
+    }
+
+    @Override
     public List<Event> getEventsByUserId(String userId) {
         List<Event> bookedEvents = new ArrayList<>();
         if (userRepository.findByUserId(userId) != null) {
-            for (Booking b : bookingRepository.findEventsByUserId(userId)) {
+            for (Booking b : bookingRepository.findByUserIdAndAttendedStatus(userId,"none")) {
                 bookedEvents.add(eventService.getEventByEventId(b.getEventId()));
             }
             return bookedEvents;
@@ -73,8 +96,8 @@ public class BookingServiceImpl implements BookingService {
 
     @Override
     public void cancelEventBooking(Booking booking) {
-        if (bookingRepository.findByEventIdAndUserId(booking.getEventId(), booking.getUserId()) != null) {
-            Booking booking1 = bookingRepository.findByEventIdAndUserId(booking.getEventId(), booking.getUserId());
+        if (bookingRepository.findByEventIdAndUserIdAndAttendedStatus(booking.getEventId(), booking.getUserId(), "none") != null) {
+            Booking booking1 = bookingRepository.findByEventIdAndUserIdAndAttendedStatus(booking.getEventId(), booking.getUserId(), "none");
             booking1.setAttendedStatus("cancelled");
             bookingRepository.save(booking1);
         } else {

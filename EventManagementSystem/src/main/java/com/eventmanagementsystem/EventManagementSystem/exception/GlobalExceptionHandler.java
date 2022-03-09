@@ -11,6 +11,16 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 @RestControllerAdvice
 public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
+    @ExceptionHandler(EventTitleNotFoundException.class)
+    public ResponseEntity<ApiResponse> handleEventTitleNotFoundException(EventTitleNotFoundException e)
+    {
+        ApiResponse exceptionResponse = new ApiResponse();
+        exceptionResponse.setStatus(Status.FAILED.name());
+        exceptionResponse.setMessage(e.getMessage());
+
+        return new ResponseEntity<>(exceptionResponse, HttpStatus.NOT_FOUND);
+    }
+
     @ExceptionHandler(EventIdNotFoundException.class)
     public ResponseEntity<ApiResponse> handleEventIdNotFoundException(EventIdNotFoundException e)
     {
@@ -60,6 +70,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
         return new ResponseEntity<>(exceptionResponse, HttpStatus.NOT_FOUND);
     }
+
 
     @ExceptionHandler(TitleAlreadyExistsException.class)
     public ResponseEntity<ApiResponse> handleTitleAlreadyExistsException(TitleAlreadyExistsException e)

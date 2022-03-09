@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.mapping.Field;
 
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotBlank;
@@ -20,6 +21,7 @@ public class Event {
 
     private String id;
 
+    @Field("event_id")
     private String eventId;
 
     @NotBlank
@@ -31,21 +33,26 @@ public class Event {
     private String venue;
 
     @NotBlank
-    @Pattern(regexp = "^(3[01]|[12][0-9]|0[1-9])-(1[0-2]|0[1-9])-[0-9]{4}$", message = "must be a valid date (DD-MM-YYYY)")
+    @Pattern(regexp = "^[0-9]{4}-(1[0-2]|0[1-9])-(3[01]|[12][0-9]|0[1-9])$", message = "must be a valid date (YYYY-MM-DD)")
     private String date;
 
     @Min(100)
     private double amount;
 
     @NotBlank // only for text
-    @Size(min = 20, max = 50, message = "must contain min 20 characters")
+    @Size(min = 15, max = 50, message = "must contain min 15 characters")
     private String description;
 
+    @Field("created_on")
     private String createdOn;
 
+    @Field("created_by")
     private String createdBy;
 
+    @Field("last_updated_on")
     private String lastUpdatedOn;
 
     private String status;
+
+
 }

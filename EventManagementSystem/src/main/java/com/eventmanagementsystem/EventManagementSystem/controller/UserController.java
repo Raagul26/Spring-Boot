@@ -51,8 +51,8 @@ public class UserController {
     // user login
     @PostMapping("/login")
     public ResponseEntity<ApiResponse> userLogin(@Valid @RequestBody UserLogin userLoginDetails) {
-        userService.userLogin(userLoginDetails);
         ApiResponse responseBody = new ApiResponse();
+        responseBody.setData(userService.userLogin(userLoginDetails));
         responseBody.setStatus(Status.SUCCESS.name());
         responseBody.setMessage("User Logged in successfully");
         String jwtToken = jwtUtility.generateToken(userLoginDetails);
@@ -133,6 +133,23 @@ public class UserController {
             bookingService.cancelEventBooking(booking);
             responseBody.setStatus(Status.SUCCESS.name());
             responseBody.setMessage("Cancelled Event");
+            return new ResponseEntity<>(responseBody, HttpStatus.OK);
+        } else {
+            responseBody.setStatus(Status.FAILED.name());
+            responseBody.setMessage("Access denied");
+            return new ResponseEntity<>(responseBody, HttpStatus.UNAUTHORIZED);
+        }
+    }
+
+    // get User
+    @GetMapping("/{userId}")
+    public ResponseEntity<ApiResponse> getUser(@PathVariable String userId, @RequestHeader(value = "authorization") String auth)
+    {
+        ApiResponse responseBody = new ApiResponse();
+        if (jwtUtility.validateUserToken(auth)) {
+            responseBody.setData(userRepository.findByUsersId(userId));
+            responseBody.setStatus(Status.SUCCESS.name());
+            responseBody.setMessage("Fetched User Successfully");
             return new ResponseEntity<>(responseBody, HttpStatus.OK);
         } else {
             responseBody.setStatus(Status.FAILED.name());
