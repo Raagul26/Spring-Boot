@@ -40,7 +40,7 @@ public class Event {
     private double amount;
 
     @NotBlank // only for text
-    @Size(min = 15, max = 50, message = "must contain min 15 characters")
+    @Size(min = 15, max = 500, message = "must contain min 15 characters")
     private String description;
 
     @Field("created_on")

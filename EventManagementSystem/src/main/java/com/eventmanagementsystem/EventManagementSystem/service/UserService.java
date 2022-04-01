@@ -6,6 +6,7 @@ import com.eventmanagementsystem.EventManagementSystem.model.UserUpdate;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
 
 @Service
 public interface UserService {
@@ -16,7 +17,7 @@ public interface UserService {
 
     User getUserByEmailId(String emailId);
 
-    String userLogin(UserLogin userLoginDetails);
+    Map<String,String> userLogin(UserLogin userLoginDetails);
 
     void updateUser(String userId, UserUpdate user);
 

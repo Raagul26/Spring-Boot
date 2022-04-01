@@ -47,6 +47,9 @@ public class User {
     @Field("contact_no")
     private String contactNo;
 
+    @Field("user_type")
+    private String userType;
+
     @Field("created_on")
     private String createdOn;
 

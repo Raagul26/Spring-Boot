@@ -13,9 +13,9 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
 import java.util.List;
-import java.util.Objects;
-import java.util.stream.Stream;
+import java.util.Map;
 
 @Service
 public class UserServiceImpl implements UserService {
@@ -40,9 +40,9 @@ public class UserServiceImpl implements UserService {
             newUser.setEmailId(user.getEmailId());
             newUser.setPassword(encodedPassword);
             newUser.setContactNo(user.getContactNo());
+            newUser.setUserType("user");
             newUser.setCreatedOn(dateFormat.format(date));
             newUser.setStatus("active");
-
             userRepository.insert(newUser);
         } else {
             throw new EmailIdAlreadyExistException("Email Id Already exists");
@@ -55,14 +55,16 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public String userLogin(UserLogin userLoginDetails) {
+    public Map<String, String> userLogin(UserLogin userLoginDetails) {
         try {
             String encodedPassword = getUserByEmailId(userLoginDetails.getEmailId()).getPassword();
             if (!bCryptPasswordEncoder.matches(userLoginDetails.getPassword(), encodedPassword)) {
                 throw new InvalidCredException("Invalid EmailId or Password");
             }
-            String userId = getUserByEmailId(userLoginDetails.getEmailId()).getUserId();
-            return userId;
+            User user = getUserByEmailId(userLoginDetails.getEmailId());
+            Map<String,String> op = new HashMap<String,String>();
+            op.put("userId",user.getUserId());
+            return op;
         }
         catch (NullPointerException e)
         {

@@ -11,7 +11,7 @@ import java.util.List;
 public interface UserRepository extends MongoRepository<User, String> {
 
     @Override
-    @Query(value = "{}", fields = "{password:0}")
+    @Query(value = "{userType:'user'}", fields = "{password:0}")
     List<User> findAll();
 
     User findByEmailId(String emailId);

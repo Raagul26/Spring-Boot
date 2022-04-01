@@ -6,7 +6,6 @@ import com.eventmanagementsystem.EventManagementSystem.model.Booking;
 import com.eventmanagementsystem.EventManagementSystem.model.User;
 import com.eventmanagementsystem.EventManagementSystem.model.UserLogin;
 import com.eventmanagementsystem.EventManagementSystem.model.UserUpdate;
-import com.eventmanagementsystem.EventManagementSystem.repository.AdminRepository;
 import com.eventmanagementsystem.EventManagementSystem.repository.UserRepository;
 import com.eventmanagementsystem.EventManagementSystem.service.BookingService;
 import com.eventmanagementsystem.EventManagementSystem.service.UserService;
@@ -18,6 +17,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
+import java.util.Objects;
 
 @RestController
 @RequestMapping("/user")
@@ -34,9 +34,6 @@ public class UserController {
 
     @Autowired
     private JwtUtility jwtUtility;
-
-    @Autowired
-    private AdminRepository adminRepository;
 
     // user signup
     @PostMapping(value = "/signup")
@@ -65,7 +62,7 @@ public class UserController {
     @GetMapping("/all")
     public ResponseEntity<ApiResponse> getUsers(@RequestHeader(value = "authorization") String auth) {
         ApiResponse responseBody = new ApiResponse();
-        if (jwtUtility.validateAdminToken(auth)) {
+        if (Objects.equals(jwtUtility.validateToken(auth), "admin")) {
             responseBody.setData(userService.getAllUsers());
             responseBody.setStatus(Status.SUCCESS.name());
             responseBody.setMessage("Fetched Successfully");
@@ -81,7 +78,7 @@ public class UserController {
     @PutMapping("/update/{userId}")
     public ResponseEntity<ApiResponse> updateUser(@PathVariable String userId, @Valid @RequestBody UserUpdate user, @RequestHeader(value = "authorization") String auth) {
         ApiResponse responseBody = new ApiResponse();
-        if (jwtUtility.validateUserToken(auth)) {
+        if (Objects.equals(jwtUtility.validateToken(auth), "user")) {
             userService.updateUser(userId, user);
             responseBody.setStatus(Status.SUCCESS.name());
             responseBody.setMessage("User Updated Successfully");
@@ -97,7 +94,7 @@ public class UserController {
     @PostMapping("/bookEvent")
     public ResponseEntity<ApiResponse> bookEvent(@RequestBody Booking booking, @RequestHeader(value = "authorization") String auth) {
         ApiResponse responseBody = new ApiResponse();
-        if (jwtUtility.validateUserToken(auth)) {
+        if (Objects.equals(jwtUtility.validateToken(auth), "user")) {
             bookingService.bookEvent(booking);
             responseBody.setStatus(Status.SUCCESS.name());
             responseBody.setMessage("Event Booked Successfully");
@@ -113,7 +110,7 @@ public class UserController {
     @GetMapping("/bookedEvents/{userId}")
     public ResponseEntity<ApiResponse> bookedEvents(@PathVariable String userId, @RequestHeader(value = "authorization") String auth) {
         ApiResponse responseBody = new ApiResponse();
-        if (jwtUtility.validateUserToken(auth)) {
+        if (Objects.equals(jwtUtility.validateToken(auth), "user")) {
             responseBody.setData(bookingService.getEventsByUserId(userId));
             responseBody.setStatus(Status.SUCCESS.name());
             responseBody.setMessage("Fetched booked events");
@@ -129,7 +126,7 @@ public class UserController {
     @PostMapping("/cancelEvent")
     public ResponseEntity<ApiResponse> cancelEvent(@RequestBody Booking booking, @RequestHeader(value = "authorization") String auth) {
         ApiResponse responseBody = new ApiResponse();
-        if (jwtUtility.validateUserToken(auth)) {
+        if (Objects.equals(jwtUtility.validateToken(auth), "user")) {
             bookingService.cancelEventBooking(booking);
             responseBody.setStatus(Status.SUCCESS.name());
             responseBody.setMessage("Cancelled Event");
@@ -146,7 +143,7 @@ public class UserController {
     public ResponseEntity<ApiResponse> getUser(@PathVariable String userId, @RequestHeader(value = "authorization") String auth)
     {
         ApiResponse responseBody = new ApiResponse();
-        if (jwtUtility.validateUserToken(auth)) {
+        if (Objects.equals(jwtUtility.validateToken(auth), "user")) {
             responseBody.setData(userRepository.findByUsersId(userId));
             responseBody.setStatus(Status.SUCCESS.name());
             responseBody.setMessage("Fetched User Successfully");

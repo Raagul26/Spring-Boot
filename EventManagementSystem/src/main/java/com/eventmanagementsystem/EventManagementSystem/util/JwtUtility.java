@@ -1,10 +1,8 @@
 package com.eventmanagementsystem.EventManagementSystem.util;
 
-import com.eventmanagementsystem.EventManagementSystem.exception.GlobalExceptionHandler;
 import com.eventmanagementsystem.EventManagementSystem.exception.JwtTokenExpiredException;
-import com.eventmanagementsystem.EventManagementSystem.model.Admin;
+import com.eventmanagementsystem.EventManagementSystem.model.User;
 import com.eventmanagementsystem.EventManagementSystem.model.UserLogin;
-import com.eventmanagementsystem.EventManagementSystem.repository.AdminRepository;
 import com.eventmanagementsystem.EventManagementSystem.repository.UserRepository;
 import io.jsonwebtoken.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,9 +16,6 @@ import java.util.function.Function;
 
 @Component
 public class JwtUtility implements Serializable {
-
-    @Autowired
-    private AdminRepository adminRepository;
 
     @Autowired
     private UserRepository userRepository;
@@ -68,38 +63,30 @@ public class JwtUtility implements Serializable {
         return doGenerateToken(claims, userLogin.getEmailId());
     }
 
-    public String generateToken(Admin adminLogin) {
-        Map<String, Object> claims = new HashMap<>();
-        return doGenerateToken(claims, adminLogin.getEmailId());
-    }
-
     private String doGenerateToken(Map<String, Object> claims, String subject) {
-
-        return Jwts.builder().setClaims(claims).setSubject(subject).setIssuedAt(new Date(System.currentTimeMillis()))
+        return Jwts.builder().setClaims(claims).claim("role",userRepository.findByEmailId(subject).getUserType()).setSubject(subject).setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + JWT_TOKEN_VALIDITY * 1000))
                 .signWith(SignatureAlgorithm.HS512, secret).compact();
     }
 
-    //validate token
-    public Boolean validateAdminToken(String token) {
+    public String validateToken(String token) {
         try {
-            final String emailId = getUsernameFromToken(token);
-            return (adminRepository.findByEmailId(emailId) != null && !isTokenExpired(token));
+            final Claims claims = getAllClaimsFromToken(token);
+            User user= userRepository.findByEmailId(claims.getSubject());
+            if(claims.get("role").equals("user") && user != null && !isTokenExpired(token)) {
+                return "user";
+            }
+            else if(claims.get("role").equals("admin") && user != null && !isTokenExpired(token))
+            {
+                return "admin";
+            }
+            else {
+                return "";
+            }
         }
         catch (IllegalArgumentException | SignatureException | MalformedJwtException e)
         {
-            return false;
-        }
-    }
-
-    public Boolean validateUserToken(String token) {
-        try {
-            final String emailId = getUsernameFromToken(token);
-            return (userRepository.findByEmailId(emailId) != null && !isTokenExpired(token));
-        }
-        catch (IllegalArgumentException | SignatureException | MalformedJwtException e)
-        {
-            return false;
+            return "";
         }
     }
 }
