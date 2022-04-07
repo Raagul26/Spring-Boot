@@ -17,6 +17,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
+import java.util.Map;
 import java.util.Objects;
 
 @RestController
@@ -52,7 +53,7 @@ public class UserController {
         responseBody.setData(userService.userLogin(userLoginDetails));
         responseBody.setStatus(Status.SUCCESS.name());
         responseBody.setMessage("User Logged in successfully");
-        String jwtToken = jwtUtility.generateToken(userLoginDetails);
+        String jwtToken = jwtUtility.generateToken(userLoginDetails.getEmailId());
         HttpHeaders responseHeader = new HttpHeaders();
         responseHeader.set("JWTToken", jwtToken);
         return new ResponseEntity<>(responseBody, responseHeader, HttpStatus.OK);
@@ -152,6 +153,41 @@ public class UserController {
             responseBody.setStatus(Status.FAILED.name());
             responseBody.setMessage("Access denied");
             return new ResponseEntity<>(responseBody, HttpStatus.UNAUTHORIZED);
+        }
+    }
+
+    @GetMapping("/forgotPassword/{emailId}")
+    public ResponseEntity<ApiResponse> resetPassword(@PathVariable String emailId)
+    {
+        ApiResponse response = new ApiResponse();
+        if(userService.forgotPassword(emailId))
+        {
+            response.setStatus(Status.SUCCESS.name());
+            response.setMessage("Mail Sent Successfully");
+            return new ResponseEntity<>(response,HttpStatus.OK);
+        }
+        else {
+            response.setStatus(Status.FAILED.name());
+            response.setMessage("Something went wrong");
+            return new ResponseEntity<>(response,HttpStatus.OK);
+        }
+    }
+
+    @PutMapping("/resetPassword")
+    public ResponseEntity<ApiResponse> resetPassword(@RequestBody Map<String,String> resetPasswordCredentials)
+    {
+        ApiResponse response = new ApiResponse();
+        if(userService.resetPassword(resetPasswordCredentials))
+        {
+            response.setStatus("Success");
+            response.setMessage("Password resetted successfully");
+            return new ResponseEntity<>(response,HttpStatus.OK);
+        }
+        else
+        {
+            response.setStatus("Failed");
+            response.setMessage("Something went wrong");
+            return new ResponseEntity<>(response,HttpStatus.BAD_REQUEST);
         }
     }
 

@@ -21,4 +21,10 @@ public interface UserService {
 
     void updateUser(String userId, UserUpdate user);
 
+    void sendMail(String sender,String subject, String link);
+
+    boolean forgotPassword(String emailId);
+
+    boolean resetPassword(Map<String,String> resetPasswordCredentials);
+
 }

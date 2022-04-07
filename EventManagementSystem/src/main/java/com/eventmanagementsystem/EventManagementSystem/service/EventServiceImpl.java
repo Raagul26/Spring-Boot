@@ -74,12 +74,16 @@ public class EventServiceImpl implements EventService {
 
     @Override
     public List<Event> getActiveEvents() {
-        return eventRepository.findByStatus("active");
+        LocalDateTime date = LocalDateTime.now();
+        DateTimeFormatter dateFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        return eventRepository.findByStatusAndDate("active",dateFormat.format(date));
     }
 
     @Override
     public List<Event> getDeletedEvents() {
-        return eventRepository.findByStatus("deleted");
+        LocalDateTime date = LocalDateTime.now();
+        DateTimeFormatter dateFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        return eventRepository.findByStatusAndDate("deleted",dateFormat.format(date));
     }
 
     @Override
